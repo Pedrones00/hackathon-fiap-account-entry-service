@@ -5,7 +5,7 @@ export default async () => {
 
     const AccountEntry = AccountEntryModel();
 
-    await db.connection.sync();
+    await db.connection.sync({alter: true});
 
     return {
         AccountEntry

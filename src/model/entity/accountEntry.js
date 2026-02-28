@@ -59,7 +59,7 @@ export default () => {
                 allowNull: false,
                 defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
             },
-            is_classified: {
+            isCategorized: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
                 defaultValue: false
