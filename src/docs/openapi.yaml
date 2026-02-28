@@ -1,0 +1,275 @@
+openapi: 3.0.1
+info:
+  title: Account Entry API
+  version: 1.0.0
+  description: |
+    REST API for managing financial account entries.
+    Supports CRUD operations, filtering and categorization.
+  contact:
+    name: API Support
+    email: support@example.com
+servers:
+  - url: http://localhost:3001
+    description: Local development server
+paths:
+  /account-entries:
+    get:
+      tags:
+        - entries
+      summary: Retrieve a list of account entries
+      description: >
+        Returns an array of entries. Optional query parameters may filter
+        by agency, account, category status or entry name.
+      parameters:
+        - in: query
+          name: agency
+          schema:
+            type: string
+          description: Filter by agency (4 chars)
+        - in: query
+          name: account
+          schema:
+            type: string
+          description: Filter by account number (max 11 chars)
+        - in: query
+          name: category
+          schema:
+            type: boolean
+          description: Filter by categorized status (true/false)
+        - in: query
+          name: entry_name
+          schema:
+            type: string
+          description: Filter by entry name
+      responses:
+        '200':
+          description: List of entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountEntry'
+        '400':
+          description: Invalid query parameter
+    post:
+      tags:
+        - entries
+      summary: Create a new account entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountEntryCreate'
+      responses:
+        '201':
+          description: Entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountEntryResponse'
+        '400':
+          description: Invalid input
+  /account-entries/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Numeric entry ID
+    get:
+      tags:
+        - entries
+      summary: Get entry by ID
+      responses:
+        '200':
+          description: Entry record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountEntry'
+        '404':
+          description: Not found
+  /account-entries/{id}/category:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Entry ID
+    patch:
+      tags:
+        - entries
+      summary: Add or update category on an entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+      responses:
+        '200':
+          description: Categorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountEntryResponse'
+        '400':
+          description: Invalid input
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - entries
+      summary: Remove category from entry
+      responses:
+        '204':
+          description: Category removed
+        '404':
+          description: Not found
+  /account-entries/cpf/list:
+    get:
+      tags:
+        - entries
+      summary: List distinct CPFs present in entries
+      responses:
+        '200':
+          description: Array of CPF strings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CpfResponse'
+  /account-entries/{cpf}/agency-account:
+    parameters:
+      - name: cpf
+        in: path
+        required: true
+        schema:
+          type: string
+        description: CPF of user (11 digits)
+    get:
+      tags:
+        - entries
+      summary: Get agency/account pairs for a CPF
+      responses:
+        '200':
+          description: Array of agency/account objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgencyAccountResponse'
+        '400':
+          description: Invalid CPF
+components:
+  schemas:
+    AccountEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 15
+        cpf:
+          type: string
+          example: "12345678901"
+        agency:
+          type: string
+          example: "0001"
+        account:
+          type: string
+          example: "123456-7"
+        entry_name:
+          type: string
+          example: "Electricity bill"
+        value:
+          type: number
+          format: float
+          example: 99.99
+        entry_type:
+          type: string
+          enum: [CREDIT, DEBIT]
+          example: DEBIT
+        entry_ts:
+          type: string
+          format: date-time
+          example: "2025-02-15T13:45:30Z"
+        is_categorized:
+          type: boolean
+          example: false
+        category:
+          type: string
+          nullable: true
+      required:
+        - cpf
+        - agency
+        - account
+        - entry_name
+        - value
+        - entry_type
+    AccountEntryCreate:
+      type: object
+      properties:
+        cpf:
+          type: string
+        agency:
+          type: string
+        account:
+          type: string
+        entry_name:
+          type: string
+        value:
+          type: number
+          format: float
+        entry_type:
+          type: string
+          enum: [CREDIT, DEBIT]
+      required:
+        - cpf
+        - agency
+        - account
+        - entry_name
+        - value
+        - entry_type
+    AccountEntryResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/AccountEntry'
+    CategoryUpdate:
+      type: object
+      properties:
+        category:
+          type: string
+      required:
+        - category
+    CpfResponse:
+      type: object
+      properties:
+        cpf:
+          type: string
+    AgencyAccountResponse:
+      type: object
+      properties:
+        agency:
+          type: string
+        account:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      example:
+        code: 400
+        message: "Bad request"
