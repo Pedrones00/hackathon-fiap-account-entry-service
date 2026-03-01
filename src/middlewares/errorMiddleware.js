@@ -6,7 +6,7 @@ class ErrorMiddleware {
             const statusCode = 500;
             const message = "Internal error";
 
-            return res.status(statusCode).json({
+            return response.status(statusCode).json({
                 statusCode,
                 message
             });
