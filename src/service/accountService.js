@@ -1,15 +1,46 @@
-import { Sequelize } from 'sequelize';
-
 import AccountResponseDTO from "../model/dto/accountResponseDTO.js";
 import ThrowError from "../utils/throwError.js";
-import { raw } from 'express';
 import CpfResponseDTO from '../model/dto/cpfResponseDTO.js';
 import AgencyAccountResponseDTO from '../model/dto/agencyAccountResponseDTO.js';
+import 'dotenv/config';
 
 class AccountService {
 
     constructor(AccountEntryModel) {
         this.accountEntryModel = AccountEntryModel;
+    }
+
+    #notifyClassifier(entry) {
+
+        const url = `${process.env.CLASSIFIER_SERVICE_URL}${process.env.CLASSIFIER_SERVICE_ANALYSE_ENDPOINT}`
+
+        const payload = {
+            id_entry: entry.id,
+            agency: entry.agency,
+            account: entry.account,
+            entry_name: entry.entryName
+        };
+
+        console.log(`[Outbound] Sending entry ${entry.id} to classifier service - ${new Date().toISOString()}`);
+
+        fetch(url,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Internal-Service': 'account-entry-service'},
+                body: JSON.stringify(payload),
+                signal: AbortSignal.timeout(3000)
+            }
+        )
+        .then(response => {
+            if (!response.ok) console.warn("[Classifier] Error status:", response.status);
+        })
+        .catch(error => {
+            if (error.name === 'AbortError') {
+            console.error("[Timeout] Classifier service took too long (>3s)");
+            } else {
+                console.error("[Connection Error] Classifier unreachable:", error.message);
+            }
+        });
     }
 
     async getAll(agency, account, category, entryName) {
@@ -22,7 +53,7 @@ class AccountService {
             }
         }
 
-        if (category) filter['isCategorized'] = category;
+        if (category !== null) filter['isCategorized'] = category;
 
         if(entryName) filter['entryName'] = entryName;
 
@@ -79,6 +110,8 @@ class AccountService {
                 entryType: entryType
             }
         );
+
+        this.#notifyClassifier(entry);
 
         return new AccountResponseDTO(await entry.reload());
     }
