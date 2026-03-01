@@ -53,9 +53,11 @@ class AccountService {
             }
         }
 
-        if (category !== null) filter['isCategorized'] = category;
+        if (category !== null && category !== undefined) filter['isCategorized'] = category;
 
         if(entryName) filter['entryName'] = entryName;
+
+        console.log(category, typeof category)
 
         const accountEntrys = await this.accountEntryModel.findAll({
             where: {
