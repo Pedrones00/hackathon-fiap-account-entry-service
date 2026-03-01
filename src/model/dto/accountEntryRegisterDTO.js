@@ -18,15 +18,15 @@ class AccountEntryRegisterDTO {
 
         if (!data) return errors.push('No data');
 
-        if (!data.cpf || typeof data.cpf !== 'string' || data.cpf.trim().length !==  11) {
-            errors.push('Invalid cpf. Must be a string and have 11 characters');
+        if (!data.cpf || typeof data.cpf !== 'string' || data.cpf.trim().length !==  11 || !this.isNumber(data.cpf.trim())) {
+            errors.push('Invalid cpf. Must be a numeric string and have 11 characters');
         }
 
-        if (!data.agency || typeof data.agency !== 'string' || data.agency.trim().length !==  4) {
-            errors.push('Invalid agendy. Must be a numeric string and have 8 characters');
+        if (!data.agency || typeof data.agency !== 'string' || data.agency.trim().length !==  4 || !this.isNumber(data.agency.trim())) {
+            errors.push('Invalid agency. Must be a numeric string and have 4 characters');
         }
 
-        if (!data.account || typeof data.account !== 'string' || data.account.trim().length > 11 || data.account.trim().length < 1) {
+        if (!data.account || typeof data.account !== 'string' || data.account.trim().length > 11 || data.account.trim().length < 1 || !this.isNumber(data.account.trim())) {
             errors.push('Invalid account. Must be a string and have maximum 11 characters');
         }
     
@@ -44,6 +44,13 @@ class AccountEntryRegisterDTO {
 
         return errors;
 
+    }
+
+    static isNumber(value) {
+        if (typeof value !== 'string') return false;
+        if (value.trim() === '') return false;
+
+        return !Number.isNaN(Number(value));
     }
     
 }
