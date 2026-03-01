@@ -10,7 +10,7 @@ class DBConnection {
         this.#parametersDB = {
             dialect: 'sqlite',
             storage: process.env.DATABASE_PATH || './storage/database.sqlite',
-            logging: process.env.NODE_ENV === 'development' ? console.log : false,
+            logging: process.env.DB_LOGGING === 'true' ? console.log : false,
             define: {
                 underscored: true,
                 timestamps: true
