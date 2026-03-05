@@ -57,8 +57,6 @@ class AccountService {
 
         if(entryName) filter['entryName'] = entryName;
 
-        console.log(category, typeof category)
-
         const accountEntrys = await this.accountEntryModel.findAll({
             where: {
                 ...filter 
